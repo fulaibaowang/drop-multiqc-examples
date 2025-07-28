@@ -81,7 +81,8 @@ p_comp <- ggplot(coverage_dt[isExternal == F], aes(x = total_count, y = read_cou
   theme_cowplot() + background_grid() +
   labs(title = "Total mapped vs. Counted Reads", x = "Mapped Reads", y = "Counted Reads") +
   xlim(c(0,NA)) + ylim(c(0,NA))
-p_comp
+ggsave("mapped_vs_counted_mqc.png", p_comp, width = 5, height = 3.75, dpi = 196, bg = "white")
+
 # ggExtra::ggMarginal(p_comp, type = "histogram") # could be a nice add-on
 
 p_sf <- ggplot(coverage_dt, aes(sf_rank, size_factors, col = isExternal)) +
@@ -95,8 +96,8 @@ p_sf
 
 setnames(coverage_dt, old = c('total_count', 'read_count', 'size_factors'),
          new = c('Reads Mapped', 'Reads Counted', 'Size Factors'))
-DT::datatable(coverage_dt[, .(RNA_ID, `Reads Mapped`, `Reads Counted`, `Size Factors`)][order(`Reads Mapped`)],
-              caption = 'Reads summary statistics')
+reads_statistics <- coverage_dt[, .(RNA_ID, `Reads Mapped`, `Reads Counted`, `Size Factors`)][order(`Reads Mapped`)]
+write.table(reads_statistics, file="reads_statistics_mqc.tsv", row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\t")
 
 #' # Filtering
 #' **local**: A pre-filtered summary of counts using only the local (from BAM) counts. Omitted if no external counts  
@@ -192,7 +193,7 @@ if(has_external){
 # Get sex column and proceed if it exists
 sex_idx <- which('SEX' == toupper(colnames(colData(ods))))
 if(isEmpty(sex_idx)){
-  print('Sex column not found in sample annotation')
+  writeLines(c('# plot_type: "html"','Sex column not found in sample annotation'), con = file.path("expression_sex_mqc.tsv"))
 } else{
   
   # Verify if both XIST and UTY were counted
